@@ -4,16 +4,21 @@ of a specimen, from the TaxonWorks api /otus/<ID>/inventory/dwc.json.
 For further reference see https://dwc.tdwg.org/terms/.
 -->
 <template>
-  <!--    <ul class="tree m-2 ml-6 list-disc">-->
-  <div v-html="nameAndAuthor(specimen)"/>
-  <ul class="tree ml-6 relative">
-    <li class="my-2">{{ describeSpecimen(specimen) }}</li>
-    <li class="my-2">{{describeDetails(specimen).join(', ')}}</li>
+  <div v-html="nameAndAuthor(specimen)" class="font-bold mb-2"/>
+  <ul class="tree ml-7 relative list-disc">
+    <li class="my-1 last:mb-0" v-if="describeSpecimen(specimen)">{{ describeSpecimen(specimen) }}</li>
+    <li class="my-1 last:mb-0" v-if="describeDetails(specimen).length">{{ describeDetails(specimen).join(', ') }}</li>
     <GalleryImage
         v-if="images.length"
         :images="images"
         :only-thumbs="true"
     />
+    <li v-for="note in notes" :key="note.id" class="my-1 last:mb-0">
+      Note: {{ note.text }}
+    </li>
+    <li v-for="tag in tags" :key="tag.id" class="my-1 last:mb-0">
+      Tag: {{ tag.keyword?.name ?? "no name provided" }}
+    </li>
   </ul>
 </template>
 
@@ -33,14 +38,27 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  notes: {
+    type: Array,
+    default: [],
+  },
+  tags: {
+    type: Array,
+    default: [],
+  },
 })
 
 function genusSpecies(specimen) {
-  return [specimen.genus,  specimen.specificEpithet].filter(Boolean).join(' ')
+  return [specimen.genus, specimen.specificEpithet].filter(Boolean).join(' ')
 }
 
 function nameAndAuthor(specimen) {
-  return [`<em>${genusSpecies(specimen)}</em>`, specimen.scientificNameAuthorship].filter(Boolean).join(' ')
+  // scientificName contains most specific available rank
+  // italicize the genus + species
+  return specimen.scientificName
+      .replace(genusSpecies(specimen), `<em>${genusSpecies(specimen)}</em>`)
+      .replace(specimen.family, `Family ${specimen.family}`)
+      .replace(specimen.order, `Order ${specimen.order}`)
 }
 
 /** Inspired by taxonpages-orthoptera PanelSpecimenRecords. */
@@ -55,12 +73,13 @@ function describeSpecimen(specimen) {
 
 function describeDetails(specimen) {
   return [
+    specimen.individualCount !== 1 && `${specimen.individualCount} specimens`,
     describeCollectionDate(specimen),
     specimen.recordedBy && `Recorded by ${specimen.recordedBy}`,
     describeIdentifiedBy(specimen),
     specimen.georeferencedBy && `Geolocated by ${specimen.georeferencedBy}${describeGeoreferenceUncertainty(specimen)}`,
     // CollectionObject #1234
-    specimen.dwc_occurrence_object_id && `${specimen.dwc_occurrence_object_type} #${specimen.dwc_occurrence_object_id}`,
+    // specimen.dwc_occurrence_object_id && `${specimen.dwc_occurrence_object_type} #${specimen.dwc_occurrence_object_id}`,
   ].filter(Boolean)
 }
 
