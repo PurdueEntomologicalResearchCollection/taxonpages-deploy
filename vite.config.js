@@ -28,7 +28,7 @@ export default () => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '#': path.resolve(__dirname, '.')
+        '~': path.resolve(process.cwd())
       }
     },
 
@@ -36,6 +36,18 @@ export default () => {
       preprocessorOptions: {
         scss: {
           api: 'modern-compiler'
+        }
+      }
+    },
+
+    build: {
+      rollupOptions: {
+        output: {
+          // Append suffix "-min" to avoid trailing hyphens such as index-328ajA-.js
+          // (Cascade CMS doesn't allow filename bases ending with hyphens)
+          entryFileNames: 'assets/[name]-[hash]-min.js',
+          chunkFileNames: 'assets/[name]-[hash]-min.js',
+          assetFileNames: 'assets/[name]-[hash]-min.[ext]'
         }
       }
     },
