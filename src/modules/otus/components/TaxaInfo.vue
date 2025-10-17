@@ -1,9 +1,9 @@
 <template>
   <div>
-    <p class="text-1xl capitalize">
+    <p class="text-2xl like-a-header capitalize">
       {{ store.taxon?.rank || 'Combination' }}
     </p>
-    <h1 class="text-xl dark:text-gray-100">
+    <h1 class="dark:text-gray-100">
       <span>
         <span
           :title="store.taxon?.short_status"
@@ -24,7 +24,10 @@
         </span>
       </span>
     </h1>
-    <h2 class="text-1xl">
+    <h2
+      v-if="store.taxonomy.commonNames?.length"
+      class="text-1xl"
+    >
       <CommonNames />
     </h2>
   </div>
